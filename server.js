@@ -42,60 +42,24 @@ require('dotenv').config(); // read the '.env' files's saved env variables AFTER
 const app = express(); // express() will return a fully ready to run server object
 app.use(cors()); // enables local processes to talk  to the server // Cross Origin Resource Sharing
 
-const PORT = process.env.PORT || 3009; //If there is a port use it otherwise use 3009
-console.log(process.env.candy);
+const PORT = process.env.PORT || 3000; //If there is a port use it otherwise use 3009
 //============================Routes================================
-const ginger = {
-    name:'ginger',
-    age: 2,
-    friends: 1
-}
 
 //this route can be visited  http://localhost:3009/puppy
-app.get('/puppy',puppyCallback); // this is a route that lives at /puppy and sends a ginger object
+//app.get('/puppy',puppyCallback); // this is a route that lives at /puppy and sends a ginger object
 // the first parameter will always be given request data
 // the secon parameter will always be given response data
-function puppyCallback(req,res){
-    ginger.friends++;
-    res.send(ginger);
-}
 
-app.get('/location',handleGetLocation(res,req));
-   
-    const dataFromTheFile = require('./data/file.json'); //in an express server, we can synchronously get data from a local json file without a .then
 
-    /*res.send({
-            "search_query": "seattle",
-            "formatted_query": "Seattle, WA, USA",
-            "latitude": "47.606210",
-            "longitude": "-122.332071"
-          });        
-          */
-/*
-Lab requirement approximation: Create a route name '/location' that sends location data to the client. An example of how the data should look liks is this
-{
-  "search_query": "seattle",
-  "formatted_query": "Seattle, WA, USA",
-  "latitude": "47.606210",
-  "longitude": "-122.332071"
-}
-*/
+
+
     //const output = new Location(dataFromTheFile, req.query);
     //console.log(req.query);
-    const output = {
-        search_query:'',
-        formatted_query:dataFromTheFile[0].display_name,
-        latitude:dataFromTheFile[0].lat,
-        longitude: dataFromTheFile[0].lon
-}
-res.send(output);
+    const output = { }
+    // res.send(output);
 
-function Location(dataFromTheFile,cityName){
-    this.search_query = cityName;
-    this.formatted_query = dataFromTheFile[0].display_name;
-    this.latitude = dataFromTheFile[0].lat;
-    this.longitude = dataFromTheFile[0].lon;
-}
+
+
 
 //============================Initialization================================
 // I can visit this server on http://localhose:3009
