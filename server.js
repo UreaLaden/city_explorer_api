@@ -52,13 +52,13 @@ const { response } = require('express');
 //this route can be visited  http://localhost:3009/puppy
 app.get('/location',getLocationData); // this is a route that lives at /puppy and sends a ginger object
 function getLocationData(request,response){
+    //console.log(Object.entries(request.query)[0][1]);
     let locOne = new Location(locationData,request.query);
     response.send(locOne);
 }
 
 app.get('/weather',getWeatherData);
 function getWeatherData(req,res){
-    console.log(weatherData);
     let currentForecast = new WeatherForcast(weatherData);
     res.send(currentForecast);
 }
@@ -82,7 +82,8 @@ function Forecast(forecast,time,city){
 }
 
 function Location(dataFromTheFile,cityName){
-    this.search_query = cityName;
+    let city = Object.entries(cityName)[0][1];
+    this.search_query = city;
     this.formatted_query = dataFromTheFile[0].display_name;
     this.latitude = dataFromTheFile[0].lat;
     this.longitude = dataFromTheFile[0].lon;
