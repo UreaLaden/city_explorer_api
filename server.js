@@ -47,32 +47,27 @@ console.log(process.env.candy);
 //============================Routes================================
 const locationData = require('./location.json'); //in an express server, we can synchronously get data from a local json file without a .then
 const weatherData = require('./weather.json');
-const { response } = require('express');
+//const { response } = require('express');
 
 //this route can be visited  http://localhost:3009/puppy
 app.get('/location',getLocationData); // this is a route that lives at /puppy and sends a ginger object
 function getLocationData(request,response){
-    //console.log(Object.entries(request.query)[0][1]);
-    let locOne = new Location(locationData,request.query);
-    response.send(locOne);
+    response.send(new Location(locationData,request.query));
 }
 
 app.get('/weather',getWeatherData);
 function getWeatherData(req,res){
-    let currentForecast = new WeatherForcast(weatherData);
-    res.send(currentForecast);
+    res.send(new WeatherForcast(weatherData));
 }
 
 function WeatherForcast(weatherData){
-    let allForecasts = [];
-    for(let i=0;i< weatherData.data.length;i++){
-        let forecast = weatherData.data[i].weather.description;
-        let dateTime = weatherData.data[i].datetime;
-        let city = weatherData.city_name;
-        allForecasts.push(new Forecast(forecast,dateTime, city));
-    } 
-    return allForecasts;   
     
+    return weatherData.data.map(value =>{
+        const forecast = value.weather.description;
+        dateTime = value.datetime;
+        city = weatherData.city_name;
+        return new Forecast(forecast,dateTime,city);        
+    })        
 }
 
 function Forecast(forecast,time,city){
