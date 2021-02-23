@@ -45,61 +45,48 @@ app.use(cors()); // enables local processes to talk  to the server // Cross Orig
 const PORT = process.env.PORT || 3009; //If there is a port use it otherwise use 3009
 console.log(process.env.candy);
 //============================Routes================================
-const dataFromTheFile = require('./location.json'); //in an express server, we can synchronously get data from a local json file without a .then
+const locationData = require('./location.json'); //in an express server, we can synchronously get data from a local json file without a .then
+const weatherData = require('./weather.json');
+const { response } = require('express');
 
 //this route can be visited  http://localhost:3009/puppy
 app.get('/location',getLocationData); // this is a route that lives at /puppy and sends a ginger object
 function getLocationData(request,response){
-    console.log(dataFromTheFile);
-    let locOne = new Location(dataFromTheFile,request.query);
+    let locOne = new Location(locationData,request.query);
     response.send(locOne);
 }
 
-
-
-//app.get('/location',handleGetLocation(res,req));
-   
- 
-/*
-Lab requirement approximation: Create a route name '/location' that sends location data to the client. An example of how the data should look liks is this
-[
-    {
-      "place_id": "222943963",
-      "licence": "https://locationiq.com/attribution",
-      "osm_type": "relation",
-      "osm_id": "237662",
-      "boundingbox": [
-        "47.802219",
-        "47.853569",
-        "-122.34211",
-        "-122.261618"
-      ],
-      "lat": "47.8278656",
-      "lon": "-122.3053932",
-      "display_name": "Lynnwood, Snohomish County, Washington, USA",
-      "class": "place",
-      "type": "city",
-      "importance": 0.61729106268039,
-      "icon": "https://locationiq.org/static/images/mapicons/poi_place_city.p.20.png"
-    }
-*/
-    //const output = new Location(dataFromTheFile, req.query);
-    //console.log(req.query);
-    const output = {
-        search_query:'',
-        formatted_query:dataFromTheFile[0].display_name,
-        latitude:dataFromTheFile[0].lat,
-        longitude: dataFromTheFile[0].lon
+app.get('/weather',getWeatherData);
+function getWeatherData(req,res){
+    console.log(weatherData);
+    let currentForecast = new WeatherForcast(weatherData);
+    res.send(currentForecast);
 }
-//res.send(output);
+
+function WeatherForcast(weatherData){
+    let allForecasts = [];
+    for(let i=0;i< weatherData.data.length;i++){
+        let forecast = weatherData.data[i].weather.description;
+        let dateTime = weatherData.data[i].datetime;
+        allForecasts.push(new Forecast(forecast,dateTime));
+    } 
+    return allForecasts;   
+    
+}
+
+function Forecast(forecast,time){
+    this.forecast = forecast;
+    this.time = time;
+}
 
 function Location(dataFromTheFile,cityName){
-    this.search_query = cityName;
+    let city = Object.keys(cityName)[0];
+    this.search_query = city;
     this.formatted_query = dataFromTheFile[0].display_name;
     this.latitude = dataFromTheFile[0].lat;
     this.longitude = dataFromTheFile[0].lon;
 }
 
 //============================Initialization================================
-// I can visit this server on http://localhose:3009
-app.listen(PORT, () => console.log(`app is up on port http://localhose:${PORT}`)); // starts the server
+// I can visit this server on http://localhost:3000
+app.listen(PORT, () => console.log(`app is up on port http://localhost:${PORT}`)); // starts the server
