@@ -82,8 +82,7 @@ function Forecast(forecast,time,city){
 }
 
 function Location(dataFromTheFile,cityName){
-    let city = Object.keys(cityName)[0];
-    this.search_query = city;
+    this.search_query = cityName;
     this.formatted_query = dataFromTheFile[0].display_name;
     this.latitude = dataFromTheFile[0].lat;
     this.longitude = dataFromTheFile[0].lon;
