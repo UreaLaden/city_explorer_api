@@ -34,6 +34,8 @@ This application converts a location entered by the user into a latitude and lon
 
  02-23-2021 6:05pm - Refactored getWeather callback to use .map
 
+02-23-2021 06:15pm - Redeployed App to Heroku
+
 
 ## Credits and Collaborations
 <!-- Give credit (and a link) to other people or resources that helped you build this application. -->
