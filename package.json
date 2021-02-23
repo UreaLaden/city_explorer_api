@@ -1,17 +1,26 @@
 {
-  "name": "city-explorer",
+  "name": "city-explorer-api",
   "version": "1.0.0",
-  "description": "",
+  "description": "App queries a city search and displays information",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
   },
-  "author": "",
+  "author": "Leaundrae Mckinney",
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
     "express": "^4.17.1"
-  }
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/UreaLaden/lab-06.git"
+  },
+  "bugs": {
+    "url": "https://github.com/UreaLaden/lab-06/issues"
+  },
+  "homepage": "https://github.com/UreaLaden/lab-06#readme"
 }
