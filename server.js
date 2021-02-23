@@ -68,15 +68,17 @@ function WeatherForcast(weatherData){
     for(let i=0;i< weatherData.data.length;i++){
         let forecast = weatherData.data[i].weather.description;
         let dateTime = weatherData.data[i].datetime;
-        allForecasts.push(new Forecast(forecast,dateTime));
+        let city = weatherData.city_name;
+        allForecasts.push(new Forecast(forecast,dateTime, city));
     } 
     return allForecasts;   
     
 }
 
-function Forecast(forecast,time){
+function Forecast(forecast,time,city){
     this.forecast = forecast;
     this.time = time;
+    this.city = city;
 }
 
 function Location(dataFromTheFile,cityName){
