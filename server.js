@@ -27,6 +27,18 @@
     
     When data is sent from the client to the backend, it comes in a property: ' request.query'
     */
+
+    /*
+1. Make a db 'CREATE DATABASE' book people
+2. Make a schema file for y9our table ('s)
+3. run the schema.sql file with 'psql -f SCHEMA_FILE_NAME.sql -d DATABASE_NAME
+4. Install pg 'npm install - S pg'
+5. setup pg in your app
+
+Stuff from the url from the client: req.query
+Stuff from superagent: result.body
+Stuff from postgres: result.rows
+*/
    //#endregion
 
 //============================Packages================================
@@ -35,12 +47,17 @@ require('dotenv').config(); // read the '.env' files's saved env variables AFTER
 const express = require('express');
 const cors = require('cors'); //lets our computer talk to itself
 const superagent = require('superagent');
+const pg = require('pg');
+
 // If this line of code comes, delete it const { response } = require('express');
 
 //============================Apps================================
 const app = express(); // express() will return a fully ready to run server object
 app.use(cors()); // enables local processes to talk  to the server // Cross Origin Resource Sharing
 const PORT = process.env.PORT || 3009; //If there is a port use it otherwise use 3009
+const DATABASE_URL = process.env.DATABASE_URL;
+const client = new pg.Client(DATABASE_URL);
+client.on('error',error => console.log(error));
 
 //============================Routes================================
 

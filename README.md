@@ -44,6 +44,8 @@ This application converts a location entered by the user into a latitude and lon
 
 02-24-2021 01:19am - Redeployed Park API
 
+02-25-2021 05:18pm - Installed and required NPM PostgreSQL package
+
 
 
 
