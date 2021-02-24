@@ -1,7 +1,7 @@
 # City Explorer Api
 
 **Author**:Leaundrae Mckinney
-**Version**:1.0.0
+**Version**:1.0.2
 
 ## Overview
 
@@ -40,6 +40,9 @@ This application converts a location entered by the user into a latitude and lon
 
 02-23-2021 00:02am - Added parks API key
 
+02-24-2021 01:15am - Implemented Park API
+
+02-24-2021 01:19am - Redeployed Park API
 
 
 
