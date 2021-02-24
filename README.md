@@ -36,6 +36,13 @@ This application converts a location entered by the user into a latitude and lon
 
 02-23-2021 06:15pm - Redeployed App to Heroku
 
+02-23-2021 11:00pm - Implemented the Weather API
+
+02-23-2021 00:02am - Added parks API key
+
+
+
+
 
 ## Credits and Collaborations
 <!-- Give credit (and a link) to other people or resources that helped you build this application. -->

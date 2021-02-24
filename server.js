@@ -49,8 +49,9 @@ const PORT = process.env.PORT || 3009; //If there is a port use it otherwise use
 const weatherData = require('./weather.json');
 
 locationKey = process.env.GEOCODE_API_KEY;
-weatherKey = process.env.WEATHER_API_KEY;
 //this route can be visited  http://localhost:3009/puppy
+
+//#region Location
 
 app.get('/location',getLocationData); // this is a route that lives at /puppy and sends a ginger object
 function getLocationData(request,response){
@@ -66,6 +67,17 @@ function getLocationData(request,response){
     });
 }
 
+function Location(data,cityName){
+    this.search_query = Object.entries(cityName)[0][1];
+    this.formatted_query = data.body[0].display_name;
+    this.latitude = data.body[0].lat;
+    this.longitude = data.body[0].lon
+}
+
+//#endregion
+
+//#region Weather 
+weatherKey = process.env.WEATHER_API_KEY;
 app.get('/weather',getWeatherData);
 function getWeatherData(request,response){
     const weatherURL = `https://api.weatherbit.io/v2.0/forecast/daily?lat=${request.query.latitude}&lon=${request.query.longitude}&key=${weatherKey}&days=8`;
@@ -78,8 +90,6 @@ function getWeatherData(request,response){
         "Something went wrong";
     })
 }
-
-
 
 function WeatherForcast(weatherData){
     
@@ -96,13 +106,7 @@ function Forecast(forecast,time,city){
     this.time = time;
     this.city = city;
 }
-
-function Location(data,cityName){
-    this.search_query = Object.entries(cityName)[0][1];
-    this.formatted_query = data.body[0].display_name;
-    this.latitude = data.body[0].lat;
-    this.longitude = data.body[0].lon
-}
+//#endregion
 
 //============================Initialization================================
 // I can visit this server on http://localhost:3009
