@@ -57,9 +57,19 @@ app.use(cors()); // enables local processes to talk  to the server // Cross Orig
 const PORT = process.env.PORT || 3009; //If there is a port use it otherwise use 3009
 const DATABASE_URL = process.env.DATABASE_URL;
 const client = new pg.Client(DATABASE_URL);
-client.on('error',error => console.log(error));
+client.on('error',error => console.log("Bad things",error));
 
 //============================Routes================================
+const students = [{name:'leaundrae',favBook: 'the unspoken name', class:301}];
+
+app.get('/',(req,res)=>{
+    client.query('SELECT * FROM locations;')
+    .then(pgStuff => {
+        console.log(pgStuff.rows);
+        res.send(pgStuff.rows);
+    })
+})
+
 
 //#region Location
 app.get('/location',getLocationData); // this is a route that lives at /puppy and sends a ginger object
@@ -148,4 +158,8 @@ function Park(name,address,fee,description,url){
 
 //============================Initialization================================
 // I can visit this server on http://localhost:3009
-app.listen(PORT, () => console.log(`app is up on port http://localhost:${PORT}`)); // starts the server
+client.connect().then(()=>{
+    app.listen(PORT, () => console.log(`app is up on port http://localhost:${PORT}`))
+}).catch(error =>{
+        console.log(error);
+    })
