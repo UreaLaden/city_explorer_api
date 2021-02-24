@@ -59,11 +59,11 @@ function getLocationData(request,response){
     console.log(url);
     superagent.get(url)
     .then((res)=>{
-        console.log(res.body);
-        response.send(new Location(res.body,request.query));
+        let location = new Location(res,request.query);
+        response.send(location);
     })
     .catch(error => {
-        "Something went wrong";
+        response.send("Something went wrong");
     });
 }
 
@@ -89,11 +89,12 @@ function Forecast(forecast,time,city){
     this.city = city;
 }
 
-function Location(dataFromTheFile,cityName){
+function Location(data,cityName){
+
     this.search_query = Object.entries(cityName)[0][1];
-    this.formatted_query = dataFromTheFile[0].display_name;
-    this.latitude = dataFromTheFile[0].lat;
-    this.longitude = dataFromTheFile[0].lon;
+    this.formatted_query = data.body[0].display_name;
+    this.latitude = data.body[0].lat;
+    this.longitude = data.body[0].lon
 }
 
 //============================Initialization================================
