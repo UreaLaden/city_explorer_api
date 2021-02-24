@@ -63,7 +63,7 @@ function getLocationData(request,response){
         response.send(location);
     })
     .catch(error => {
-        response.send("Something went wrong");
+        response(500).send("Something went wrong");
     });
 }
 
@@ -87,7 +87,7 @@ function getWeatherData(request,response){
         response.send(forecast);
     })
     .catch( error => {
-        "Something went wrong";
+        response(500).send("Something went wrong");
     })
 }
 
