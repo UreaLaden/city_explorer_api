@@ -12,7 +12,6 @@
 - starting the server
 */
 
-
 /*
     The Environment: the collection of all variables that belong to the terminal window your code is running in
     I want to use the PORT the computer wants me to use since the port is a computerish thing
@@ -42,16 +41,12 @@ require('dotenv').config(); // read the '.env' files's saved env variables AFTER
 //============================Apps================================
 const app = express(); // express() will return a fully ready to run server object
 app.use(cors()); // enables local processes to talk  to the server // Cross Origin Resource Sharing
-
 const PORT = process.env.PORT || 3009; //If there is a port use it otherwise use 3009
-//============================Routes================================
-//const locationData = require('./location.json'); //in an express server, we can synchronously get data from a local json file without a .then
-const weatherData = require('./weather.json');
 
-locationKey = process.env.GEOCODE_API_KEY;
-//this route can be visited  http://localhost:3009/puppy
+//============================Routes================================
 
 //#region Location
+locationKey = process.env.GEOCODE_API_KEY;
 
 app.get('/location',getLocationData); // this is a route that lives at /puppy and sends a ginger object
 function getLocationData(request,response){
@@ -60,6 +55,7 @@ function getLocationData(request,response){
     superagent.get(url)
     .then((res)=>{
         let location = new Location(res,request.query);
+        //console.log(location);
         response.send(location);
     })
     .catch(error => {
@@ -107,6 +103,46 @@ function Forecast(forecast,time,city){
     this.city = city;
 }
 //#endregion
+
+//#region Park
+const parkKey = process.env.PARKS_API_KEY;
+
+app.get('/parks',getParkData);
+function getParkData(request,response){
+    const parkURL = `https://developer.nps.gov/api/v1/parks?q=${request.query.search_query}&api_key=${parkKey}`;
+    superagent.get(parkURL)
+    .then((res) =>{
+        let nearestParks = new GetParkList(res.body.data);
+        console.log(nearestParks);
+        response.send(nearestParks);
+    })
+    .catch(error => {
+        response.send("Something went wrong");
+    })
+}
+
+function GetParkList(parkData){
+    return parkData.map(data =>{
+        let name = data.fullName        
+        address = data.addresses[0].line1;
+        fees = data.entranceFees[0].cost;
+        description = data.description;
+        url = data.url;
+        return new Park(name,address,fees,description,url);
+    })
+    
+}
+
+function Park(name,address,fee,description,url){
+    this.name = name;
+    this.address = address;
+    this.fee = fee;
+    this.description = description;
+    this.url = url;
+}
+
+
+////#endregion
 
 //============================Initialization================================
 // I can visit this server on http://localhost:3009
