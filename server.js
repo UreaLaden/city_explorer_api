@@ -44,23 +44,23 @@ const app = express(); // express() will return a fully ready to run server obje
 app.use(cors()); // enables local processes to talk  to the server // Cross Origin Resource Sharing
 
 const PORT = process.env.PORT || 3009; //If there is a port use it otherwise use 3009
-console.log(process.env.candy);
 //============================Routes================================
 //const locationData = require('./location.json'); //in an express server, we can synchronously get data from a local json file without a .then
 const weatherData = require('./weather.json');
-app.get('/location',getLocationData); // this is a route that lives at /puppy and sends a ginger object
 
 locationKey = process.env.GEOCODE_API_KEY;
 //this route can be visited  http://localhost:3009/puppy
 
+app.get('/location',getLocationData); // this is a route that lives at /puppy and sends a ginger object
 
 function getLocationData(request,response){
     
-    const url = `https://us1.locationiq.com/v1/search.php?key=${locationKey}&q=${request.query}&format=json`;
+    const url = `https://us1.locationiq.com/v1/search.php?key=${locationKey}&q=${request.query.city}&format=json`;
+    console.log(url);
     superagent.get(url)
     .then((res)=>{
-        console.log(res);
-        res.send(new Location(res,request.query));
+        console.log(res.body);
+        response.send(new Location(res.body,request.query));
     })
     .catch(error => {
         "Something went wrong";
