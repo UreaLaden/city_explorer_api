@@ -49,14 +49,13 @@ const PORT = process.env.PORT || 3009; //If there is a port use it otherwise use
 const weatherData = require('./weather.json');
 
 locationKey = process.env.GEOCODE_API_KEY;
+weatherKey = process.env.WEATHER_API_KEY;
 //this route can be visited  http://localhost:3009/puppy
 
 app.get('/location',getLocationData); // this is a route that lives at /puppy and sends a ginger object
-
 function getLocationData(request,response){
     
     const url = `https://us1.locationiq.com/v1/search.php?key=${locationKey}&q=${request.query.city}&format=json`;
-    console.log(url);
     superagent.get(url)
     .then((res)=>{
         let location = new Location(res,request.query);
@@ -67,11 +66,20 @@ function getLocationData(request,response){
     });
 }
 
-
 app.get('/weather',getWeatherData);
-function getWeatherData(req,res){
-    res.send(new WeatherForcast(weatherData));
+function getWeatherData(request,response){
+    const weatherURL = `https://api.weatherbit.io/v2.0/forecast/daily?lat=${request.query.latitude}&lon=${request.query.longitude}&key=${weatherKey}&days=8`;
+    superagent.get(weatherURL)
+    .then((res) =>{
+        let forecast = new WeatherForcast(res.body);
+        response.send(forecast);
+    })
+    .catch( error => {
+        "Something went wrong";
+    })
 }
+
+
 
 function WeatherForcast(weatherData){
     
@@ -90,7 +98,6 @@ function Forecast(forecast,time,city){
 }
 
 function Location(data,cityName){
-
     this.search_query = Object.entries(cityName)[0][1];
     this.formatted_query = data.body[0].display_name;
     this.latitude = data.body[0].lat;
@@ -98,5 +105,5 @@ function Location(data,cityName){
 }
 
 //============================Initialization================================
-// I can visit this server on http://localhost:3000
+// I can visit this server on http://localhost:3009
 app.listen(PORT, () => console.log(`app is up on port http://localhost:${PORT}`)); // starts the server
