@@ -33,6 +33,7 @@
 2. Make a schema file for y9our table ('s)
 3. run the schema.sql file with 'psql -f SCHEMA_FILE_NAME.sql -d DATABASE_NAME
 4. Install pg 'npm install - S pg'
+*Don't forget to install superagent via npm install -S superagent* 
 5. setup pg in your app
 
 Stuff from the url from the client: req.query
