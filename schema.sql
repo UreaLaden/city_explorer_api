@@ -7,8 +7,8 @@ DROP TABLE IF EXISTS parks;
 CREATE TABLE locations(
     id SERIAL PRIMARY KEY,
     location_name VARCHAR(255),
-    latitude FLOAT,
-    longitude FLOAT
+    longitude FLOAT,
+    latitude FLOAT
 );
 
 CREATE TABLE weather(
