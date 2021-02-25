@@ -98,7 +98,7 @@ app.get('/location',(req,res)=>
                 const sqlArray = [req.query.city,results.body[0].lon,results.body[0].lat];
                 
                 client.query(sqlString,sqlArray)
-                .then(()=>console.log("Location data stored"));
+                .then((data)=>console.log(data, "was stored in location table"));
                 
                 let obj = results.body[0];
                 let newLocationFromDB = new Location(obj,req.query.city);
@@ -107,7 +107,7 @@ app.get('/location',(req,res)=>
             })
             .catch(error => 
             {
-                res.status(500).send("Internal Error: Location's not here chief"); 
+                res.status(500).send("Internal Error: Location's not here chief", error); 
             });
             
         };
@@ -127,9 +127,6 @@ function Location(data,cityName)
 //#endregion
 
 //#region Weather 
-// function getWeatherData(request,response)
-// {
-// }
 weatherKey = process.env.WEATHER_API_KEY;
 app.get('/weather',(request,response) => {
     
@@ -141,7 +138,6 @@ app.get('/weather',(request,response) => {
         console.log("Row Count: ",callbackFromPG.rowCount);
         if(callbackFromPG.rowCount > 0){
             console.log("Weatherman's on Deck!");
-            console.log(callbackFromPG.rows[0]);
             response.status(200).json(callbackFromPG.rows[0]);
         }
         else{
@@ -150,19 +146,18 @@ app.get('/weather',(request,response) => {
             .then((res) =>
             {
                 let newForecastFromDB = new WeatherForcast(res.body);
-                console.log("New Forecast: ", newForecastFromDB);
                 
                 const sqlStringOne = 'INSERT INTO weather (forecast,city,date_time) VALUES($1,$2,$3);'
                 const sqlArrayOne = [res.body.data[0].weather.description,request.query.location_name,res.body.data[0].datetime];
                 
                 client.query(sqlStringOne,sqlArrayOne)
-                .then(() => console.log("Weather data stored"));
+                .then((data) => console.log(data, "was stored into weather"));
 
                 response.send(newForecastFromDB);
             })
             .catch( error => 
                 {
-                    response.status(500).send("Internal Error: Forecast doesn't look good...");
+                    response.status(500).send("Internal Error: Forecast doesn't look good...", error);
                 })
             };
     });
@@ -187,23 +182,59 @@ function Forecast(forecast,time,city)
     this.city = city;
 }
 //#endregion
-/*
+
+
 //#region Park
-app.get('/parks',getParkData);
 const parkKey = process.env.PARKS_API_KEY;
-function getParkData(request,response)
-{
-    const parkURL = `https://developer.nps.gov/api/v1/parks?q=${request.query.search_query}&api_key=${parkKey}`;
-    superagent.get(parkURL)
-    .then((res) =>
-    {
-        response.send(new GetParkList(res.body.data));
-    })
-    .catch(error => 
-    {
-        response(500).send("Internal Error: You messed up");
-    })
-}
+app.get('/parks',(request,response)=>{
+    const sqlStrSearch = 'SELECT * FROM parks WHERE park_name=$1';
+    const sqlArrSearch = [request.query.location_name];
+    console.log("========================================",request.query);
+    client.query(sqlStrSearch,sqlArrSearch)
+    .then((sqlCallback) => {
+        console.log("Park Row Count: ", sqlCallback.rowCount);
+        if(sqlCallback.rowCount > 0){
+            console.log("Park information inside database");
+            response.status(200).json(sqlCallback.rows[0]);
+        }
+        else{
+            console.log("************************Parks",request.query.search_query);
+            const parkURL = `https://developer.nps.gov/api/v1/parks?q=${request.query.search_query}&api_key=${parkKey}`;
+            console.log(parkURL);
+            superagent.get(parkURL)
+            .then((res) =>
+            {
+                console.log("!!!!!!!!!!!!!!!!!!!!!!",res.body.data);
+                //let resBodyAddress = res.body.data[0].addresses[0];
+                //let formattedAddress = `${resBodyAddress.line1} ${resBodyAddress.city}, ${resBodyAddress.stateCode}, ${resBodyAddress.postalCode}`;
+                console.log("!!!!!!!!!!!!!!!!!!!");
+                //let formattedCost = res.body.data[0].entranceFees[0].cost;
+                //console.log(formattedCost);
+                //let formattedDescription = res.body.data[0].description;
+                const sqlStrTwo = 'INSERT INTO parks (park_name,park_address,entrance_cost,park_description,park_url) VALUES ($1,$2,$3,$4,$5);'
+                const sqlArrTwo = [
+                    res.body.data[0].fullName,
+                    formattedAddress,
+                    res.body.data[0].entranceFees[0].cost,
+                    res.body.data[0].description,
+                    res.body.data[0].url
+                ];
+                console.log(sqlArrTwo);
+                client.query(sqlStrTwo,sqlArrTwo)
+                .then((data) => console.log(data + "was stored into parks table" ))
+
+                let newParkList = new GetParkList(res.body.data)
+                response.send(newParkList);
+            })
+            .catch(error =>{
+                response.status(500).send("Internal Error from the internal...",error);
+            })
+        };
+    });
+   
+});
+
+
 
 function GetParkList(parkData)
 {
@@ -226,7 +257,7 @@ function Park(name,address,fee,description,url)
     this.url = url;
 }
 //#endregion
-*/
+
 //============================Initialization================================
 // I can visit this server on http://localhost:3009
 client.connect().then(()=>{

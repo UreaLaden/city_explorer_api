@@ -48,7 +48,10 @@ This application converts a location entered by the user into a latitude and lon
 
 02-25-2021 06:30pm - Connected to PostGreSQL Database and created tables using schema.sql
 
-02-25-2021 09:25pm - Connected database to location route
+02-25-2021 09:05pm - Connected database to location route 
+
+02-25-2021 09:25pm - Connected database to weather route 
+
 
 
 
