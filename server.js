@@ -233,6 +233,46 @@ function Business(name,image_url,price,rating,url){
 
 //#endregion
 
+
+//#region 
+const mvKey = process.env.MOVIE_API_KEY;
+
+app.get('/movies',(request,response) =>{
+    const city = request.query.search_query;
+    const mvURL = `https://api.themoviedb.org/3/search/movie?page=1&include_adult=false&api_key=${mvKey}&query=${city}`;
+    superagent.get(mvURL)
+    .then(output => {
+        console.log( "******************",output.body.results);
+        let movieList = new GetMovieList(output.body.results)
+        response.status(200).send(movieList);
+    })
+    .catch(error => console.log("Somethings wrong with your movies...",error));
+})
+
+function GetMovieList(movieData){
+    return movieData.map(data =>{
+        return new Movie(
+            data.original_title,
+            data.overview,
+            data.vote_average,
+            data.vote_count,
+            `https://www.themoviedb.org/t/p/w600_and_h900_bestv2${data.backdrop_path}` || 'sorry no image',
+            data.popularity,
+            data.release_date
+            );
+    });
+}
+
+function Movie(title,overview,average_votes,total_votes,image_url,popularity,released_on){
+    this.title = title;
+    this.overview = overview;
+    this.average_votes = average_votes;
+    this.total_votes = total_votes;
+    this.image_url = image_url;
+    this.popularity = popularity;
+    this.released_on = released_on;
+}
+//#endregion
 //============================Initialization================================
 // I can visit this server on http://localhost:3009
 client.connect().then(()=>{
