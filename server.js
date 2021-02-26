@@ -1,46 +1,3 @@
-//#region Notes
-/*
-## Set up Server
-- Create and clone down a github repository
-- touch server.js
-- npm init
-- npm install -S express dotenv cors - Install needed libraries
--Setup the server.js file
-- Loading the packages
-- setting up the app
-- adding routes
-- starting the server
-*/
-
-/*
-    The Environment: the collection of all variables that belong to the terminal window your code is running in
-    I want to use the PORT the computer wants me to use since the port is a computerish thing
-    I will pick my port from the environment.
-
-    Creating a variable in your terminals env is 'export VARNAME=value'
-    It is semantic to name your variables in all caps
-
-    If I want to look at the env variables in the terminal type: 'env'
-    To see them in javascript: 'process.env.VARNAME'
-
-    As devs, we can save our environment variables in a file called '.env'
-    
-    When data is sent from the client to the backend, it comes in a property: ' request.query'
-    */
-
-    /*
-1. Make a db 'CREATE DATABASE' book people
-2. Make a schema file for y9our table ('s)
-3. run the schema.sql file with 'psql -f SCHEMA_FILE_NAME.sql -d DATABASE_NAME
-4. Install pg 'npm install - S pg'
-*Don't forget to install superagent via npm install -S superagent* 
-5. setup pg in your app
-
-Stuff from the url from the client: req.query
-Stuff from superagent: result.body
-Stuff from postgres: result.rows
-*/
-   //#endregion
 
 //============================Packages================================
 
@@ -74,46 +31,48 @@ app.get('/',(req,res)=>
 
 //#region Location
 const locationKey = process.env.GEOCODE_API_KEY;
-app.get('/location',(req,res)=>
+app.get('/location',(req,res) =>
 {
-    const sqlCheckingString = 'SELECT * FROM locations WHERE location_name=$1;'
-    const sqlCheckingArray = [req.query.city];
-    console.log(req.query.city);
-
-    client.query(sqlCheckingString,sqlCheckingArray)
-    .then(callbackFromPostgresql =>
-    {
-        console.log(`Count:${callbackFromPostgresql.rowCount}`);
-        if(callbackFromPostgresql.rowCount > 0)
-        {
-            console.log("Found information from Location table");
-            res.status(200).json(callbackFromPostgresql.rows[0]);
-        }
-        else
-        {
-            const url = `https://us1.locationiq.com/v1/search.php?key=${locationKey}&q=${req.query.city}&format=json`;
-            superagent.get(url)
-            .then(results =>
-            {
-                const sqlString = 'INSERT INTO locations (location_name,longitude,latitude) VALUES($1,$2,$3);'
-                const sqlArray = [req.query.city,results.body[0].lon,results.body[0].lat];
-                
-                client.query(sqlString,sqlArray)
-                .then((data)=>console.log(data, "was stored in location table"));
-                
-                let obj = results.body[0];
-                let newLocationFromDB = new Location(obj,req.query.city);
-                console.log("The new DB",newLocationFromDB);
-                res.send(newLocationFromDB); 
+    CheckDBForLocationInfo(req)
+    .then(row => {
+        if(row.rows.length === 0){
+            IfNotInDBRedirect(req)
+            .then(result =>{
+                StoreInfoInDB(result, req);
+                SendStoredInfoFromDB(result,req,res);
             })
-            .catch(error => 
-            {
-                res.status(500).send("Internal Error: Location's not here chief", error); 
-            });
-            
-        };
+        }
+        else{
+            res.status(200).send(row.rows[0]);
+        }
     })
+    .catch(error => res.status(500).send("Internal Error: Location's not here chief" + error));
 })
+
+//#region Location Functions
+function SendStoredInfoFromDB(results,req,res){
+    let obj = results.body[0];
+    let newLocationFromDB = new Location(obj,req.query.city);
+    res.send(newLocationFromDB);
+}
+
+function StoreInfoInDB(results,req){
+    const sqlString = 'INSERT INTO locations (search_query,formatted_query,longitude,latitude) VALUES($1,$2,$3,$4);'
+    const sqlArray = [req.query.city, results.body[0].display_name, results.body[0].lon, results.body[0].lat];
+    client.query(sqlString,sqlArray)
+    .then((data)=>console.log(data, "was stored in location table"));
+}
+
+function IfNotInDBRedirect(req){
+    const url = `https://us1.locationiq.com/v1/search.php?key=${locationKey}&q=${req.query.city}&format=json`;
+    return superagent.get(url);
+}
+
+function CheckDBForLocationInfo(req){
+    const sqlCheckingString = 'SELECT * FROM locations WHERE search_query=$1;'
+    const sqlCheckingArray = [req.query.city];
+    return client.query(sqlCheckingString,sqlCheckingArray);
+}
 
 function Location(data,cityName)
 {
@@ -122,7 +81,7 @@ function Location(data,cityName)
     this.latitude = data.lat;
     this.longitude = data.lon;
 }
-
+//#endregion
 
 
 //#endregion
@@ -131,49 +90,62 @@ function Location(data,cityName)
 weatherKey = process.env.WEATHER_API_KEY;
 app.get('/weather',(request,response) => {
     
-    const sqlStringCheckOne = 'SELECT * FROM weather WHERE city=$1;'
-    const sqlArrayCheckOne = [request.query.location_name];
-
-    client.query(sqlStringCheckOne,sqlArrayCheckOne)
-    .then(callbackFromPG => {
-        console.log("Row Count: ",callbackFromPG.rowCount);
-        if(callbackFromPG.rowCount > 0){
-            console.log("Weatherman's on Deck!");
-            response.status(200).json(callbackFromPG.rows[0]);
-        }
-        else{
-            const weatherURL = `https://api.weatherbit.io/v2.0/forecast/daily?lat=${request.query.latitude}&lon=${request.query.longitude}&key=${weatherKey}&days=8`;
-            superagent.get(weatherURL)
-            .then((res) =>
-            {
-                let newForecastFromDB = new WeatherForcast(res.body);
-                
-                const sqlStringOne = 'INSERT INTO weather (forecast,city,date_time) VALUES($1,$2,$3);'
-                const sqlArrayOne = [res.body.data[0].weather.description,request.query.location_name,res.body.data[0].datetime];
-                
-                client.query(sqlStringOne,sqlArrayOne)
-                .then((data) => console.log(data, "was stored into weather"));
-
-                response.send(newForecastFromDB);
+    //CheckForWeatherInfo
+    CheckForWeatherInfo(request)
+    .then(row => {
+        if(row.rowCount <= 0){
+            console.log("No weather trying to cache");
+            IfNoWeatherInfoInDB(request)
+            .then(results => {
+                StoreWeatherInfoInDB(results);
+                SendStoredWeatherInfo(response,results);
             })
-            .catch( error => 
-                {
-                    response.status(500).send("Internal Error: Forecast doesn't look good...", error);
-                })
-            };
-    });
+        }else{
+            console.log("Weatherman's on Deck!");
+            response.status(200).json(row.rows[0]);
+        }
+    })
+    .catch( error =>  response.status(500).send("Internal Error: Forecast doesn't look good..."+ error) );
 });
 
-        
-function WeatherForcast(weatherData){
-    
+function SendStoredWeatherInfo(response,res){
+    let newForecastFromDB = new WeatherForcast(res.body);
+    response.send(newForecastFromDB);
+}
+
+function StoreWeatherInfoInDB(res){
+
+    const sqlStringOne = 'INSERT INTO weather (forecast,time,city) VALUES($1,$2,$3);'
+    let promiseArr = [];
+    for(let i=0;i<res.body.data.length;i++){
+        const sqlArrayOne = [res.body.data[i].weather.description, res.body.data[i].datetime, res.body.display_name];
+        let query = client.query(sqlStringOne,sqlArrayOne);
+        promiseArr.push(query);
+    }
+    Promise.all(promiseArr)
+    .then( () => console.log("Stored Weather Data" ))
+    .catch(error => console.log(error));
+}
+
+function IfNoWeatherInfoInDB(request){
+    const weatherURL = `https://api.weatherbit.io/v2.0/forecast/daily?lat=${request.query.latitude}&lon=${request.query.longitude}&key=${weatherKey}&days=8`;
+    return superagent.get(weatherURL)
+}
+
+function CheckForWeatherInfo(request){
+    const sqlStringCheckOne = 'SELECT * FROM weather WHERE city=$1;'
+    const sqlArrayCheckOne = [request.query.search_query];    
+    return client.query(sqlStringCheckOne,sqlArrayCheckOne);
+}
+
+function WeatherForcast(weatherData){  
     return weatherData.data.map(value =>
     {
          return new Forecast(
              value.weather.description,
              value.datetime,
-             weatherData.city_name);        
-    })        
+             value.display_name );
+            })        
 }
 
 function Forecast(forecast,time,city)
@@ -186,53 +158,18 @@ function Forecast(forecast,time,city)
 
 
 //#region Park
-const parkKey = process.env.PARKS_API_KEY;
-app.get('/parks',(request,response)=>{
-    const sqlStrSearch = 'SELECT * FROM parks WHERE park_name=$1';
-    const sqlArrSearch = [request.query.location_name];
-    console.log("========================================",request.query);
-    client.query(sqlStrSearch,sqlArrSearch)
-    .then((sqlCallback) => {
-        console.log("Park Row Count: ", sqlCallback.rowCount);
-        if(sqlCallback.rowCount > 0){
-            console.log("Park information inside database");
-            response.status(200).json(sqlCallback.rows[0]);
-        }
-        else{
-            console.log("************************Parks",request.query.search_query);
-            const parkURL = `https://developer.nps.gov/api/v1/parks?q=${request.query.search_query}&api_key=${parkKey}`;
-            console.log(parkURL);
-            superagent.get(parkURL)
-            .then((res) =>
-            {
-                console.log("!!!!!!!!!!!!!!!!!!!!!!",res.body.data);
-                //let resBodyAddress = res.body.data[0].addresses[0];
-                //let formattedAddress = `${resBodyAddress.line1} ${resBodyAddress.city}, ${resBodyAddress.stateCode}, ${resBodyAddress.postalCode}`;
-                console.log("!!!!!!!!!!!!!!!!!!!");
-                //let formattedCost = res.body.data[0].entranceFees[0].cost;
-                //console.log(formattedCost);
-                //let formattedDescription = res.body.data[0].description;
-                const sqlStrTwo = 'INSERT INTO parks (park_name,park_address,entrance_cost,park_description,park_url) VALUES ($1,$2,$3,$4,$5);'
-                const sqlArrTwo = [
-                    res.body.data[0].fullName,
-                    formattedAddress,
-                    res.body.data[0].entranceFees[0].cost,
-                    res.body.data[0].description,
-                    res.body.data[0].url
-                ];
-                console.log(sqlArrTwo);
-                client.query(sqlStrTwo,sqlArrTwo)
-                .then((data) => console.log(data + "was stored into parks table" ))
 
-                let newParkList = new GetParkList(res.body.data)
-                response.send(newParkList);
-            })
-            .catch(error =>{
-                response.status(500).send("Internal Error from the internal...",error);
-            })
-        };
-    });
-   
+const parkKey = process.env.PARKS_API_KEY;
+app.get('/parks',(request,response)=>{  
+    const parkURL = `https://developer.nps.gov/api/v1/parks?q=${request.query.search_query}&api_key=${parkKey}`;
+    superagent.get(parkURL)
+    .then((res) => {
+        let newParkList = new GetParkList(res.body.data)
+        response.send(newParkList);
+    })
+    .catch(error =>{
+        response.status(500).send("Internal Error from the internal...",error);
+    })
 });
 
 
@@ -257,6 +194,11 @@ function Park(name,address,fee,description,url)
     this.description = description;
     this.url = url;
 }
+//#endregion
+
+
+//#region Yelp
+
 //#endregion
 
 //============================Initialization================================

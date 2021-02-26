@@ -6,7 +6,8 @@ DROP TABLE IF EXISTS parks;
 
 CREATE TABLE locations(
     id SERIAL PRIMARY KEY,
-    location_name VARCHAR(255),
+    search_query VARCHAR(255),
+    formatted_query VARCHAR(255),
     longitude FLOAT,
     latitude FLOAT
 );
@@ -14,8 +15,8 @@ CREATE TABLE locations(
 CREATE TABLE weather(
     id SERIAL PRIMARY KEY,
     forecast TEXT,
-    city VARCHAR(255),
-    date_time VARCHAR(255)
+    time VARCHAR(255),
+    city VARCHAR(255)
 );
 
 CREATE TABLE parks(
