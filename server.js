@@ -12,10 +12,11 @@ const pg = require('pg');
 //============================Apps================================
 const app = express(); // express() will return a fully ready to run server object
 app.use(cors()); // enables local processes to talk  to the server // Cross Origin Resource Sharing
+
 const PORT = process.env.PORT || 3009; //If there is a port use it otherwise use 3009
 const DATABASE_URL = process.env.DATABASE_URL;
 const client = new pg.Client(DATABASE_URL);
-client.on('error',error => console.log("Bad things",error));
+client.on('error',error => console.log(error));
 
 //============================Routes================================
 const students = [{name:'leaundrae',favBook: 'the unspoken name', class:301}];
@@ -172,8 +173,6 @@ app.get('/parks',(request,response)=>{
     })
 });
 
-
-
 function GetParkList(parkData)
 {
     return parkData.map(data =>
@@ -198,6 +197,39 @@ function Park(name,address,fee,description,url)
 
 
 //#region Yelp
+const yelpKey = process.env.YELP_API_KEY;
+
+app.get('/yelp',(request,response)=>{
+
+    let city = request.query.search_query;
+    const yelpUrl = `https://api.yelp.com/v3/businesses/search?location=${city}`
+    superagent.get(yelpUrl)
+    .set('authorization',`Bearer ${yelpKey}`)
+    .then(res =>{
+        let newBusinessList = new GetBusinessList(res.body.businesses);
+        response.status(200).json(newBusinessList);
+    })
+    .catch(error => console.log("Something went wrong", error));
+})
+
+function GetBusinessList(businessData){
+    return businessData.map(business =>{
+        return new Business(
+            business.name,
+            business.image_url,
+            business.price,
+            business.rating,
+            business.url);
+    })
+}
+
+function Business(name,image_url,price,rating,url){
+    this.name = name;
+    this.image_url = image_url;
+    this.price = price;
+    this.rating = rating;
+    this.url = url;
+}
 
 //#endregion
 
